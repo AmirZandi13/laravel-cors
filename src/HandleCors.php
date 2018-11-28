@@ -16,7 +16,7 @@ class HandleCors
     /** @var Dispatcher $events */
     protected $events;
 
-    public function __construct(CorsService $cors, Dispatcher $events)
+    public function __construct (CorsService $cors, Dispatcher $events)
     {
         $this->cors = $cors;
         $this->events = $events;
@@ -26,13 +26,13 @@ class HandleCors
      * Handle an incoming request. Based on Asm89\Stack\Cors by asm89
      * @see https://github.com/asm89/stack-cors/blob/master/src/Asm89/Stack/Cors.php
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  \Illuminate\Http\Request $request
+     * @param  \Closure $next
      * @return mixed
      */
-    public function handle($request, Closure $next)
+    public function handle ($request, Closure $next)
     {
-        if (! $this->cors->isCorsRequest($request)) {
+        if (!$this->cors->isCorsRequest($request)) {
             return $next($request);
         }
 
@@ -40,7 +40,7 @@ class HandleCors
             return $this->cors->handlePreflightRequest($request);
         }
 
-        if (! $this->cors->isActualRequestAllowed($request)) {
+        if (!$this->cors->isActualRequestAllowed($request)) {
             return new LaravelResponse('Not allowed in CORS policy.', 403);
         }
 
@@ -65,13 +65,23 @@ class HandleCors
      * @param Response $response
      * @return Response
      */
-    protected function addHeaders(Request $request, Response $response)
+    protected function addHeaders (Request $request, Response $response)
     {
         // Prevent double checking
-        if (! $response->headers->has('Access-Control-Allow-Origin')) {
-            $response = $this->cors->addActualRequestHeaders($response, $request);
+        if ($this->hasAllowOrigin($response)) {
+            return null;
         }
+        $response = $this->cors->addActualRequestHeaders($response, $request);
 
         return $response;
+    }
+
+    /**
+     * @param Response $response
+     * @return bool
+     */
+    protected function hasAllowOrigin (Response $response): bool
+    {
+        return $response->headers->has('Access-Control-Allow-Origin');
     }
 }
